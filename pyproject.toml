@@ -9,6 +9,8 @@ dependencies = [
     "yfinance>=0.2",
     "matplotlib>=3.7",
     "pyarrow>=14.0",
+    "pandas-ta>=0.3",
+    "scipy>=1.11",
 ]
 
 [project.optional-dependencies]
