@@ -6,6 +6,7 @@ import pandas as pd
 from backtester.engine import Engine
 from backtester.indicators import bbands, ema, macd, rolling_percentile, rsi, sma, zscore
 from strategies.mean_reversion import BollingerMeanReversion
+from strategies.momentum import RsiMacdMomentum
 
 
 def _make_close(n: int = 100) -> pd.Series:
@@ -108,3 +109,34 @@ class TestMeanReversion:
         portfolio = engine.run()
 
         assert portfolio.trade_count == 0
+
+
+class TestMomentum:
+    def test_runs_without_error(self):
+        df = _make_ohlcv(200)
+        strategy = RsiMacdMomentum("TEST", quantity=100)
+        engine = Engine(strategy, df)
+        portfolio = engine.run()
+
+        assert len(portfolio.equity_curve) == 200
+
+    def test_no_trades_without_enough_data(self):
+        df = _make_ohlcv(20)
+        strategy = RsiMacdMomentum("TEST", quantity=100)
+        engine = Engine(strategy, df)
+        portfolio = engine.run()
+
+        assert portfolio.trade_count == 0
+
+    def test_custom_rsi_thresholds(self):
+        df = _make_ohlcv(200)
+        strategy = RsiMacdMomentum(
+            "TEST",
+            rsi_oversold=40.0,
+            rsi_overbought=60.0,
+            quantity=50,
+        )
+        engine = Engine(strategy, df)
+        portfolio = engine.run()
+
+        assert len(portfolio.equity_curve) == 200
