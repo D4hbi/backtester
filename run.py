@@ -1,5 +1,7 @@
 from backtester.data import DataFeed
 from backtester.engine import Engine
+from backtester import analytics
+from backtester.report import generate
 from strategies.sma_cross import SmaCrossover
 from strategies.mean_reversion import BollingerMeanReversion
 from strategies.momentum import RsiMacdMomentum
@@ -13,15 +15,29 @@ strategies = [
     ("RSI+MACD Momentum", RsiMacdMomentum("AAPL", quantity=100)),
 ]
 
-print(f"{'Strategy':<20} {'Trades':>7} {'Final Equity':>14} {'Return':>8}")
-print("-" * 53)
+header = (
+    f"{'Strategy':<20} {'Trades':>7} {'Return':>8} {'Sharpe':>7} "
+    f"{'Sortino':>8} {'MaxDD':>7} {'WinRate':>8} {'PF':>6}"
+)
+print(header)
+print("-" * len(header))
 
 for name, strategy in strategies:
     engine = Engine(strategy, df, initial_cash=100_000)
     portfolio = engine.run()
 
+    stats = analytics.summary(portfolio)
     print(
-        f"{name:<20} {portfolio.trade_count:>7} "
-        f"${portfolio.equity_curve[-1][1]:>12,.2f} "
-        f"{portfolio.total_return:>7.2%}"
+        f"{name:<20} {stats['trade_count']:>7} "
+        f"{stats['total_return']:>7.2%} "
+        f"{stats['sharpe_ratio']:>7.2f} "
+        f"{stats['sortino_ratio']:>8.2f} "
+        f"{stats['max_drawdown']:>7.2%} "
+        f"{stats['win_rate']:>7.2%} "
+        f"{stats['profit_factor']:>6.2f}"
     )
+
+    # Generate HTML tearsheet for each strategy
+    generate(portfolio, strategy_name=name, output_path=f"reports/{name.lower().replace(' ', '_')}.html")
+
+print("\nReports saved to reports/")
