@@ -36,6 +36,7 @@ def generate(
         rolling_sharpe_chart=rolling_sharpe_chart,
     )
 
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html, encoding="utf-8")
     print(f"[Report] Tearsheet saved to {output_path}")
     return output_path
